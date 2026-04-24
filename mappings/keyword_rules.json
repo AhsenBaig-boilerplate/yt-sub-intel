@@ -1,0 +1,185 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Ordered keyword/regex rules applied to channel_title when no exact channel_id match exists. First match wins.",
+    "updated": "2026-04-24"
+  },
+  "rules": [
+    {
+      "id": "rule_news_pbs",
+      "pattern": "(?i)\\b(pbs|newshour|frontline|nova)\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Public Broadcasting",
+      "political_lean": "center",
+      "tone_style": "analytical",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_news_npr",
+      "pattern": "(?i)\\bnpr\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Public Radio",
+      "political_lean": "center",
+      "tone_style": "analytical",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_news_bbc",
+      "pattern": "(?i)\\bbbc\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "International Broadcast",
+      "political_lean": "center",
+      "tone_style": "broadcast",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_news_ap",
+      "pattern": "(?i)\\b(associated press|ap news)\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Wire Service",
+      "political_lean": "center",
+      "tone_style": "broadcast",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_news_reuters",
+      "pattern": "(?i)\\breuters\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Wire Service",
+      "political_lean": "center",
+      "tone_style": "broadcast",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_news_fox",
+      "pattern": "(?i)\\b(fox news|fox business)\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Mainstream Broadcast",
+      "political_lean": "right",
+      "tone_style": "opinion",
+      "risk_flags": { "misinformation_pattern": true }
+    },
+    {
+      "id": "rule_far_right_media",
+      "pattern": "(?i)\\b(breitbart|gateway pundit|oann|one america|newsmax|epoch times)\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Far-Right Media",
+      "political_lean": "far_right",
+      "tone_style": "propaganda",
+      "risk_flags": { "misinformation_pattern": true, "ethnonationalism": true }
+    },
+    {
+      "id": "rule_conspiracy",
+      "pattern": "(?i)\\b(infowars|alex jones|stew peters|patriot|deep state|cabal|great reset|globalist|new world order|plandemic)\\b",
+      "primary_category": "Conspiracy & Fringe",
+      "secondary_category": "Conspiracy Media",
+      "political_lean": "far_right",
+      "tone_style": "propaganda",
+      "risk_flags": { "conspiracy_driven": true, "misinformation_pattern": true }
+    },
+    {
+      "id": "rule_white_supremacy",
+      "pattern": "(?i)\\b(daily stormer|american renaissance|red ice|richard spencer|nick fuentes|groyper|america first|amren)\\b",
+      "primary_category": "Conspiracy & Fringe",
+      "secondary_category": "White Nationalist",
+      "political_lean": "far_right",
+      "tone_style": "propaganda",
+      "risk_flags": {
+        "white_supremacy": true,
+        "ethnonationalism": true,
+        "anti_immigrant_extremism": true,
+        "antisemitism": true
+      }
+    },
+    {
+      "id": "rule_left_progressive",
+      "pattern": "(?i)\\b(jacobin|democracy now|the nation|truthout|common dreams)\\b",
+      "primary_category": "News & Politics",
+      "secondary_category": "Progressive Media",
+      "political_lean": "left",
+      "tone_style": "opinion",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_science_education",
+      "pattern": "(?i)\\b(kurzgesagt|veritasium|vsauce|numberphile|minutephysics|3blue1brown|smarter every day|real engineering|practical engineering|scott manley)\\b",
+      "primary_category": "Science & Education",
+      "secondary_category": "STEM Education",
+      "political_lean": "nonpartisan",
+      "tone_style": "educational",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_tech_channels",
+      "pattern": "(?i)\\b(linus tech tips|ltt|mkbhd|marques brownlee|unbox therapy|dave2d|hardware unboxed|gamers nexus|digital foundry)\\b",
+      "primary_category": "Technology",
+      "secondary_category": "Consumer Tech",
+      "political_lean": "nonpartisan",
+      "tone_style": "entertainment",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_finance",
+      "pattern": "(?i)\\b(graham stephan|meet kevin|andrei jikh|two cents|nerdwallet|bloomberg quicktake|cnbc|wall street journal|the economist)\\b",
+      "primary_category": "Finance & Economics",
+      "secondary_category": "Personal Finance / Markets",
+      "political_lean": "center",
+      "tone_style": "analytical",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_religion_islamic",
+      "pattern": "(?i)\\b(nouman ali khan|mufti menk|yaqeen institute|omar suleiman|bayyinah|muslim|islam|quran|halal)\\b",
+      "primary_category": "Religion & Spirituality",
+      "secondary_category": "Islamic Content",
+      "political_lean": "nonpartisan",
+      "tone_style": "educational",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_religion_christian",
+      "pattern": "(?i)\\b(gospel|church|biblical|christ|jesus|sermon|hillsong|elevation|bethel|catholicism|protestant)\\b",
+      "primary_category": "Religion & Spirituality",
+      "secondary_category": "Christian Content",
+      "political_lean": "nonpartisan",
+      "tone_style": "educational",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_history_documentary",
+      "pattern": "(?i)\\b(history channel|historymarche|overly sarcastic|toldinstone|maiorianus|invicta|queens of history|extra history)\\b",
+      "primary_category": "History & Documentary",
+      "secondary_category": "History Education",
+      "political_lean": "nonpartisan",
+      "tone_style": "documentary",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_gaming",
+      "pattern": "(?i)\\b(let's play|gameplay|gaming|speedrun|minecraft|fortnite|call of duty|elden ring|game grumps|jacksepticeye|markiplier|pewdiepie|ninja)\\b",
+      "primary_category": "Gaming",
+      "secondary_category": "Gaming Entertainment",
+      "political_lean": "nonpartisan",
+      "tone_style": "entertainment",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_comedy_satire",
+      "pattern": "(?i)\\b(the daily show|saturday night live|snl|last week tonight|john oliver|stephen colbert|late night|jimmy kimmel|jimmy fallon|conan|comedy central|colbert)\\b",
+      "primary_category": "Comedy & Satire",
+      "secondary_category": "Late Night / Political Satire",
+      "political_lean": "center_left",
+      "tone_style": "satire",
+      "risk_flags": {}
+    },
+    {
+      "id": "rule_sports",
+      "pattern": "(?i)\\b(espn|nfl|nba|mlb|fifa|premier league|bundesliga|f1|formula 1|bleacher report|sports illustrated|sky sports)\\b",
+      "primary_category": "Sports",
+      "secondary_category": "Major Sports Coverage",
+      "political_lean": "nonpartisan",
+      "tone_style": "broadcast",
+      "risk_flags": {}
+    }
+  ]
+}

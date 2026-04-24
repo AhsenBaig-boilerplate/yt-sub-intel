@@ -1,0 +1,236 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Manual channel-level classifications. Keyed by channel_id; title used as human-readable label only.",
+    "updated": "2026-04-24"
+  },
+  "channels": [
+    {
+      "channel_id": "UCVTyTA7KZpC4vmozAt6vJ_A",
+      "channel_title": "NBC News",
+      "primary_category": "News & Politics",
+      "secondary_category": "Mainstream Broadcast",
+      "political_lean": "center_left",
+      "content_domains": ["politics", "world_news", "domestic_policy"],
+      "tone_style": "broadcast",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCBi2mrWuNuyYy4gbM6fU18Q",
+      "channel_title": "ABC News",
+      "primary_category": "News & Politics",
+      "secondary_category": "Mainstream Broadcast",
+      "political_lean": "center_left",
+      "content_domains": ["politics", "world_news", "domestic_policy"],
+      "tone_style": "broadcast",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCXIJgqnII2ZOINSWNOGFThA",
+      "channel_title": "Fox News",
+      "primary_category": "News & Politics",
+      "secondary_category": "Mainstream Broadcast",
+      "political_lean": "right",
+      "content_domains": ["politics", "domestic_policy", "opinion"],
+      "tone_style": "opinion",
+      "risk_flags": {
+        "misinformation_pattern": true
+      },
+      "notes": "Consistent fact-check failures across election coverage and public health topics"
+    },
+    {
+      "channel_id": "UCupvZG-5ko_eiXAupbDfxWw",
+      "channel_title": "CNN",
+      "primary_category": "News & Politics",
+      "secondary_category": "Mainstream Broadcast",
+      "political_lean": "center_left",
+      "content_domains": ["politics", "world_news", "domestic_policy"],
+      "tone_style": "broadcast",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
+      "channel_title": "The Young Turks",
+      "primary_category": "News & Politics",
+      "secondary_category": "Progressive Commentary",
+      "political_lean": "left",
+      "content_domains": ["politics", "domestic_policy", "social_justice"],
+      "tone_style": "opinion",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCHd62-u_v4DvJ8TCFtpi4GA",
+      "channel_title": "The Daily Wire",
+      "primary_category": "News & Politics",
+      "secondary_category": "Conservative Commentary",
+      "political_lean": "right",
+      "content_domains": ["politics", "culture_war", "opinion"],
+      "tone_style": "opinion",
+      "risk_flags": {
+        "misinformation_pattern": true,
+        "anti_lgbtq_extremism": true
+      },
+      "notes": "Documented anti-LGBTQ+ editorial stance; repeated fact-check failures on social topics"
+    },
+    {
+      "channel_id": "UC5fdssPqmmGhkhsJi6VcMEQ",
+      "channel_title": "Breitbart News",
+      "primary_category": "News & Politics",
+      "secondary_category": "Far-Right Media",
+      "political_lean": "far_right",
+      "content_domains": ["politics", "immigration", "nationalism"],
+      "tone_style": "propaganda",
+      "risk_flags": {
+        "ethnonationalism": true,
+        "anti_immigrant_extremism": true,
+        "misinformation_pattern": true
+      },
+      "notes": "Platform with documented ethnonationalist editorial direction; Southern Poverty Law Center-tracked"
+    },
+    {
+      "channel_id": "UCWX3yGbODI3HMKollRBFDgw",
+      "channel_title": "InfoWars / Alex Jones",
+      "primary_category": "Conspiracy & Fringe",
+      "secondary_category": "Conspiracy Media",
+      "political_lean": "far_right",
+      "content_domains": ["conspiracy", "politics", "health_misinformation"],
+      "tone_style": "propaganda",
+      "risk_flags": {
+        "conspiracy_driven": true,
+        "misinformation_pattern": true,
+        "harassment_mobs": true
+      },
+      "notes": "Sandy Hook defamation judgment; repeat platform violations across platforms"
+    },
+    {
+      "channel_id": "UCUpJs89fSBXNXMtzV5q1PKQ",
+      "channel_title": "PBS NewsHour",
+      "primary_category": "News & Politics",
+      "secondary_category": "Public Broadcasting",
+      "political_lean": "center",
+      "content_domains": ["politics", "foreign_policy", "science", "culture"],
+      "tone_style": "analytical",
+      "risk_flags": {},
+      "notes": "Established PBS news program with consistent editorial standards"
+    },
+    {
+      "channel_id": "UCQZQkkoljDrMG7gHYYi9a_A",
+      "channel_title": "VICE News",
+      "primary_category": "News & Politics",
+      "secondary_category": "Independent Documentary",
+      "political_lean": "center_left",
+      "content_domains": ["world_news", "social_justice", "culture"],
+      "tone_style": "documentary",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCnUYZLuoy1rq1aVMwx4aTzw",
+      "channel_title": "Kurzgesagt – In a Nutshell",
+      "primary_category": "Science & Education",
+      "secondary_category": "Animated Science",
+      "political_lean": "nonpartisan",
+      "content_domains": ["science", "technology", "philosophy", "space"],
+      "tone_style": "educational",
+      "risk_flags": {},
+      "notes": "High-quality animated educational content; occasional sponsor controversies"
+    },
+    {
+      "channel_id": "UCoxcjq-8xIDTYp3uz647V5A",
+      "channel_title": "Numberphile",
+      "primary_category": "Science & Education",
+      "secondary_category": "Mathematics",
+      "political_lean": "nonpartisan",
+      "content_domains": ["mathematics"],
+      "tone_style": "educational",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCsXVk37bltHxD1rDPwtNM8Q",
+      "channel_title": "Kurzgesagt",
+      "primary_category": "Science & Education",
+      "secondary_category": "Animated Science",
+      "political_lean": "nonpartisan",
+      "content_domains": ["science", "philosophy", "space"],
+      "tone_style": "educational",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCR1IuLEqb6UEA_zQ81kwXfg",
+      "channel_title": "Russell Brand",
+      "primary_category": "Conspiracy & Fringe",
+      "secondary_category": "Anti-Establishment Commentary",
+      "political_lean": "far_right",
+      "content_domains": ["conspiracy", "politics", "anti_establishment"],
+      "tone_style": "opinion",
+      "risk_flags": {
+        "conspiracy_driven": true,
+        "misinformation_pattern": true
+      },
+      "notes": "Shifted from left-wing comedy to far-right conspiracy content post-2020; documented misinformation on health and geopolitics",
+      "tone_shift": {
+        "detected": true,
+        "shift_date": "2021-06-01",
+        "from_tone": "entertainment",
+        "to_tone": "propaganda",
+        "notes": "Documented shift from comedy/social commentary to anti-vax, conspiracy, and far-right alignment"
+      }
+    },
+    {
+      "channel_id": "UCJXGnknP4xhpFfCJMBxL7jg",
+      "channel_title": "Timcast IRL",
+      "primary_category": "News & Politics",
+      "secondary_category": "Independent Right-Wing Commentary",
+      "political_lean": "right",
+      "content_domains": ["politics", "culture_war", "opinion"],
+      "tone_style": "opinion",
+      "risk_flags": {
+        "misinformation_pattern": true
+      },
+      "notes": ""
+    },
+    {
+      "channel_id": "UCG-KntY7aVnIGXYEBQvmBAQ",
+      "channel_title": "Veritasium",
+      "primary_category": "Science & Education",
+      "secondary_category": "Physics & Engineering",
+      "political_lean": "nonpartisan",
+      "content_domains": ["physics", "engineering", "mathematics"],
+      "tone_style": "educational",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCWX3yGbODI3HMKollRBFDgw",
+      "channel_title": "The Intercept",
+      "primary_category": "News & Politics",
+      "secondary_category": "Investigative Journalism",
+      "political_lean": "left",
+      "content_domains": ["politics", "surveillance", "foreign_policy", "investigative"],
+      "tone_style": "analytical",
+      "risk_flags": {},
+      "notes": ""
+    },
+    {
+      "channel_id": "UCVSmHOdBCVOxqQR8N8LRIxg",
+      "channel_title": "Tucker Carlson",
+      "primary_category": "News & Politics",
+      "secondary_category": "Far-Right Commentary",
+      "political_lean": "far_right",
+      "content_domains": ["politics", "immigration", "nationalism", "foreign_policy"],
+      "tone_style": "opinion",
+      "risk_flags": {
+        "ethnonationalism": true,
+        "anti_immigrant_extremism": true,
+        "misinformation_pattern": true
+      },
+      "notes": "Consistent promotion of replacement theory narratives; fired from Fox News 2023"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Data — raw subscriptions may contain personal info; exclude from git
+data/subscriptions_raw.csv
+data/subscriptions_*.csv
+
+# Keep output structure but not generated files
+output/*.csv
+output/*.parquet
+output/diff_report.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp

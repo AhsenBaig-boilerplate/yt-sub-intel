@@ -1,0 +1,6 @@
+# Python 3.9+ can use polars>=0.20.0; 3.8 use >=0.19.19
+polars>=0.19.19
+pyarrow>=14.0.0
+duckdb>=0.10.0
+click>=8.0.0
+

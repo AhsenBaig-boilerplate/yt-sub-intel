@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EnrichedYouTubeChannel",
+  "description": "Schema for an enriched YouTube subscription record",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "channel_id": {
+      "type": "string",
+      "description": "YouTube channel ID from Google Takeout (UCxxx...)"
+    },
+    "channel_url": {
+      "type": "string",
+      "description": "Full channel URL"
+    },
+    "channel_title": {
+      "type": "string",
+      "description": "Display name of the channel"
+    },
+    "primary_category": {
+      "type": "string",
+      "description": "Top-level content category",
+      "enum": [
+        "News & Politics",
+        "Science & Education",
+        "Technology",
+        "Finance & Economics",
+        "Gaming",
+        "Entertainment",
+        "Sports",
+        "Health & Fitness",
+        "Religion & Spirituality",
+        "Arts & Culture",
+        "Comedy & Satire",
+        "Conspiracy & Fringe",
+        "Activism & Advocacy",
+        "Personal Finance",
+        "History & Documentary",
+        "Travel & Lifestyle",
+        "Food & Cooking",
+        "Music",
+        "Other",
+        "Unknown"
+      ]
+    },
+    "secondary_category": {
+      "type": "string",
+      "description": "Sub-category for finer classification (free text)"
+    },
+    "political_lean": {
+      "type": "string",
+      "description": "Editorial / ideological lean of the channel",
+      "enum": [
+        "far_left",
+        "left",
+        "center_left",
+        "center",
+        "center_right",
+        "right",
+        "far_right",
+        "nonpartisan",
+        "unknown"
+      ]
+    },
+    "content_domains": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Topic domains covered (e.g. [\"politics\", \"foreign_policy\"]). Stored as JSON string in CSV."
+    },
+    "tone_style": {
+      "type": "string",
+      "description": "Production / editorial tone of the channel",
+      "enum": [
+        "analytical",
+        "opinion",
+        "broadcast",
+        "documentary",
+        "entertainment",
+        "satire",
+        "propaganda",
+        "educational",
+        "grassroots",
+        "debate",
+        "unknown"
+      ]
+    },
+    "risk_white_supremacy":          { "type": "boolean" },
+    "risk_ethnonationalism":         { "type": "boolean" },
+    "risk_anti_immigrant_extremism": { "type": "boolean" },
+    "risk_antisemitism":             { "type": "boolean" },
+    "risk_anti_black_rhetoric":      { "type": "boolean" },
+    "risk_anti_lgbtq_extremism":     { "type": "boolean" },
+    "risk_religious_extremism":      { "type": "boolean" },
+    "risk_conspiracy_driven":        { "type": "boolean" },
+    "risk_harassment_mobs":          { "type": "boolean" },
+    "risk_misinformation_pattern":   { "type": "boolean" },
+    "risk_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Sum of true risk flags (0 = clean, 10 = all flags set)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text analyst notes about the channel"
+    },
+    "tone_shift_detected":  { "type": "boolean", "description": "Has a notable tone/editorial shift been observed?" },
+    "tone_shift_date":      { "type": "string",  "description": "Approximate date the shift was observed (YYYY-MM-DD)" },
+    "tone_shift_from":      { "type": "string",  "description": "Previous tone_style value before the shift" },
+    "tone_shift_to":        { "type": "string",  "description": "Current tone_style value after the shift" },
+    "tone_shift_notes":     { "type": "string",  "description": "Context for the observed shift" },
+    "first_seen_date":      { "type": "string",  "description": "Date this channel first appeared in an import (YYYY-MM-DD)" },
+    "last_seen_date":       { "type": "string",  "description": "Date of the most recent import that contained this channel (YYYY-MM-DD)" },
+    "status": {
+      "type": "string",
+      "enum": ["active", "removed"],
+      "description": "Whether channel is still present in the latest import"
+    },
+    "enrichment_version": { "type": "string", "description": "Version of channel_classifications.json used" },
+    "enrichment_source":  {
+      "type": "string",
+      "enum": ["manual", "keyword_rule", "default"],
+      "description": "How this classification was derived"
+    }
+  },
+  "required": [
+    "channel_id", "channel_url", "channel_title",
+    "primary_category", "political_lean", "tone_style",
+    "risk_score", "first_seen_date", "last_seen_date", "status",
+    "enrichment_version", "enrichment_source"
+  ]
+}
