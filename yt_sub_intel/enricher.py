@@ -1,35 +1,21 @@
-"""
-Main enrichment pipeline.
-
-1. Read raw Google Takeout CSV
-2. Classify each channel
-3. Merge with existing Parquet (if present), preserving first_seen_date and tone_shift history
-4. Detect changes (new / removed / modified)
-5. Write enriched CSV + Parquet
-6. Write diff report JSON
-"""
-
 from __future__ import annotations
 
 import json
 from datetime import date
 from pathlib import Path
-from typing import Any
-
 from typing import Any, Dict, Optional, Set
 
 import polars as pl
 
-from src.classifier import Classifier
-from src.diff import compute_diff
-from src.schema import POLARS_SCHEMA, RISK_FLAG_COLUMNS
+from yt_sub_intel.classifier import Classifier
+from yt_sub_intel.diff import compute_diff
+from yt_sub_intel.schema import POLARS_SCHEMA
 
 TAKEOUT_COL_MAP = {
     "Channel Id": "channel_id",
     "Channel Url": "channel_url",
     "Channel Title": "channel_title",
 }
-
 RAW_REQUIRED_COLS = {"Channel Id", "Channel Url", "Channel Title"}
 
 
@@ -38,11 +24,26 @@ def _read_raw_csv(path: Path) -> pl.DataFrame:
     missing = RAW_REQUIRED_COLS - set(df.columns)
     if missing:
         raise ValueError(
-            f"Raw CSV is missing expected columns: {missing}\n"
+            f"Raw CSV missing columns: {missing}\n"
             f"Found: {df.columns}\n"
             "Expected Google Takeout format: 'Channel Id', 'Channel Url', 'Channel Title'"
         )
     return df.rename({k: v for k, v in TAKEOUT_COL_MAP.items() if k in df.columns})
+
+
+def _cast_schema(df: pl.DataFrame) -> pl.DataFrame:
+    casts = []
+    for col, dtype in POLARS_SCHEMA.items():
+        if col in df.columns:
+            casts.append(pl.col(col).cast(dtype))
+        else:
+            if dtype == pl.Boolean:
+                casts.append(pl.lit(False).alias(col).cast(dtype))
+            elif dtype == pl.Int32:
+                casts.append(pl.lit(0).alias(col).cast(dtype))
+            else:
+                casts.append(pl.lit("").alias(col).cast(dtype))
+    return df.with_columns(casts).select(list(POLARS_SCHEMA.keys()))
 
 
 def _enrich_dataframe(
@@ -62,19 +63,16 @@ def _enrich_dataframe(
         ctitle = (row.get("channel_title") or "").strip()
 
         cls = classifier.classify(cid, ctitle)
-
         prev = existing_by_id.get(cid)
         first_seen = prev["first_seen_date"] if prev else today
 
-        # Preserve manually edited tone_shift history from existing record
+        # Preserve manually edited tone_shift history
         if prev and prev.get("tone_shift_detected") and not cls["tone_shift_detected"]:
-            cls["tone_shift_detected"] = prev["tone_shift_detected"]
-            cls["tone_shift_date"] = prev["tone_shift_date"]
-            cls["tone_shift_from"] = prev["tone_shift_from"]
-            cls["tone_shift_to"] = prev["tone_shift_to"]
-            cls["tone_shift_notes"] = prev["tone_shift_notes"]
+            for f in ("tone_shift_detected", "tone_shift_date", "tone_shift_from",
+                      "tone_shift_to", "tone_shift_notes"):
+                cls[f] = prev[f]
 
-        # Preserve manual notes if new classification has none
+        # Preserve manual notes when new classification has none
         if prev and prev.get("notes") and not cls["notes"]:
             cls["notes"] = prev["notes"]
 
@@ -89,30 +87,13 @@ def _enrich_dataframe(
         }
         rows.append(record)
 
-    df = pl.DataFrame(rows)
-    return _cast_schema(df)
-
-
-def _cast_schema(df: pl.DataFrame) -> pl.DataFrame:
-    casts = []
-    for col, dtype in POLARS_SCHEMA.items():
-        if col in df.columns:
-            casts.append(pl.col(col).cast(dtype))
-        else:
-            if dtype == pl.Boolean:
-                casts.append(pl.lit(False).alias(col).cast(dtype))
-            elif dtype == pl.Int32:
-                casts.append(pl.lit(0).alias(col).cast(dtype))
-            else:
-                casts.append(pl.lit("").alias(col).cast(dtype))
-    return df.with_columns(casts).select(list(POLARS_SCHEMA.keys()))
+    return _cast_schema(pl.DataFrame(rows))
 
 
 def _mark_removed(existing: pl.DataFrame, incoming_ids: Set[str], today: str) -> pl.DataFrame:
-    removed = existing.filter(
+    return existing.filter(
         ~pl.col("channel_id").is_in(incoming_ids) & (pl.col("status") == "active")
     ).with_columns(pl.lit("removed").alias("status"))
-    return removed
 
 
 def run(
@@ -146,27 +127,24 @@ def run(
         diff_report = compute_diff(existing.filter(pl.col("status") == "active"), enriched)
 
         removed = _mark_removed(existing, set(enriched["channel_id"].to_list()), today)
-
-        # Combine: current enriched (active) + previously-removed channels (status=removed)
-        # Channels that were removed and are now back are already in enriched as active
         prev_removed = existing.filter(pl.col("status") == "removed").filter(
             ~pl.col("channel_id").is_in(enriched["channel_id"].to_list())
         )
         if not removed.is_empty():
-            prev_removed = pl.concat([prev_removed, removed]) if not prev_removed.is_empty() else removed
-
+            prev_removed = (
+                pl.concat([prev_removed, removed]) if not prev_removed.is_empty() else removed
+            )
         if not prev_removed.is_empty():
             enriched = pl.concat([enriched, _cast_schema(prev_removed)])
 
     print(f"[yt-sub-intel] Writing enriched CSV:     {csv_path}")
     enriched.write_csv(csv_path)
-
     print(f"[yt-sub-intel] Writing enriched Parquet: {parquet_path}")
     enriched.write_parquet(parquet_path, compression="snappy")
 
     if diff_report is not None:
-        print(f"[yt-sub-intel] Writing diff report:      {diff_path}")
         diff_path.write_text(json.dumps(diff_report.to_dict(), indent=2))
+        print(f"[yt-sub-intel] Writing diff report:      {diff_path}")
         print("\n[yt-sub-intel] Change summary:")
         print(diff_report.summary())
     else:
@@ -177,4 +155,4 @@ def run(
     print(f"\n[yt-sub-intel] Done.")
     print(f"  Active channels:   {active_count}")
     print(f"  Flagged channels:  {flagged_count}")
-    print(f"  Output directory:  {output_dir.resolve()}")
+    print(f"  Output:            {output_dir.resolve()}")

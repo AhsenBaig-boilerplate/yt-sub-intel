@@ -1,6 +1,5 @@
 """
 Canonical field schema for the enriched YouTube subscription dataset.
-All fields are flattened for Parquet/DuckDB compatibility.
 """
 
 from __future__ import annotations
@@ -31,7 +30,7 @@ POLARS_SCHEMA: Dict[str, pl.DataType] = {
     "primary_category":              pl.Utf8,
     "secondary_category":            pl.Utf8,
     "political_lean":                pl.Utf8,
-    "content_domains":               pl.Utf8,   # JSON array string
+    "content_domains":               pl.Utf8,
     "tone_style":                    pl.Utf8,
     "risk_white_supremacy":          pl.Boolean,
     "risk_ethnonationalism":         pl.Boolean,
@@ -56,17 +55,3 @@ POLARS_SCHEMA: Dict[str, pl.DataType] = {
     "enrichment_version":            pl.Utf8,
     "enrichment_source":             pl.Utf8,
 }
-
-VALID_POLITICAL_LEANS = {
-    "far_left", "left", "center_left", "center",
-    "center_right", "right", "far_right", "nonpartisan", "unknown",
-}
-
-VALID_TONE_STYLES = {
-    "analytical", "opinion", "broadcast", "documentary",
-    "entertainment", "satire", "propaganda", "educational",
-    "grassroots", "debate", "unknown",
-}
-
-VALID_STATUSES = {"active", "removed"}
-VALID_ENRICHMENT_SOURCES = {"manual", "keyword_rule", "default"}

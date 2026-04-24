@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yt-sub-intel"
+version = "0.1.0"
+description = "YouTube Subscription Intelligence — enrich Google Takeout exports with categories, political lean, and risk flags"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "polars>=0.19.19",
+    "pyarrow>=14.0.0",
+    "duckdb>=0.10.0",
+    "click>=8.0.0",
+]
+
+[project.scripts]
+yt-sub-intel = "yt_sub_intel.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["yt_sub_intel*"]

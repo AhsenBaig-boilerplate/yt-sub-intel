@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>yt-sub-intel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { surface: '#18181b', card: '#27272a' } } }
+    };
+  </script>
+  <style>
+    body { background: #09090b; color: #f4f4f5; font-family: ui-monospace, 'Cascadia Code', monospace; }
+    .badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 600; }
+    .lean-far_left      { background: #581c87; color: #e9d5ff; }
+    .lean-left          { background: #1d4ed8; color: #bfdbfe; }
+    .lean-center_left   { background: #0284c7; color: #bae6fd; }
+    .lean-center        { background: #374151; color: #d1d5db; }
+    .lean-center_right  { background: #b45309; color: #fde68a; }
+    .lean-right         { background: #b91c1c; color: #fecaca; }
+    .lean-far_right     { background: #7f1d1d; color: #fca5a5; }
+    .lean-nonpartisan   { background: #14532d; color: #bbf7d0; }
+    .lean-unknown       { background: #3f3f46; color: #a1a1aa; }
+    .risk-0 { background: #14532d; color: #bbf7d0; }
+    .risk-1 { background: #713f12; color: #fde68a; }
+    .risk-hi { background: #7f1d1d; color: #fca5a5; }
+    th { cursor: pointer; user-select: none; }
+    th:hover { color: #a78bfa; }
+    tr:hover td { background: #27272a; }
+    #table-body tr td { border-bottom: 1px solid #27272a; }
+  </style>
+</head>
+<body class="min-h-screen p-6">
+
+  <!-- Header -->
+  <div class="mb-8 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-violet-400 tracking-tight">yt-sub-intel</h1>
+      <p class="text-zinc-500 text-sm mt-0.5">YouTube Subscription Intelligence</p>
+    </div>
+    <div class="text-right text-xs text-zinc-600">
+      <div id="last-updated"></div>
+      <div id="data-status" class="mt-1 text-yellow-500">Loading…</div>
+    </div>
+  </div>
+
+  <!-- Error banner -->
+  <div id="error-banner" class="hidden mb-6 p-4 bg-red-950 border border-red-800 rounded-lg text-red-300 text-sm"></div>
+
+  <!-- Stat cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+      <div class="text-zinc-500 text-xs uppercase tracking-widest mb-1">Active</div>
+      <div id="stat-active" class="text-3xl font-bold text-white">—</div>
+    </div>
+    <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+      <div class="text-zinc-500 text-xs uppercase tracking-widest mb-1">Flagged</div>
+      <div id="stat-flagged" class="text-3xl font-bold text-yellow-400">—</div>
+    </div>
+    <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+      <div class="text-zinc-500 text-xs uppercase tracking-widest mb-1">High Risk (2+)</div>
+      <div id="stat-high-risk" class="text-3xl font-bold text-red-400">—</div>
+    </div>
+    <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+      <div class="text-zinc-500 text-xs uppercase tracking-widest mb-1">Removed</div>
+      <div id="stat-removed" class="text-3xl font-bold text-zinc-500">—</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800">
+      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-4">Category Breakdown</h2>
+      <canvas id="chart-category" height="220"></canvas>
+    </div>
+    <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800">
+      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-4">Political Lean</h2>
+      <canvas id="chart-lean" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Risk flags -->
+  <div class="bg-zinc-900 rounded-xl p-5 border border-zinc-800 mb-8">
+    <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-4">Risk Flag Counts (active channels)</h2>
+    <canvas id="chart-risk" height="100"></canvas>
+  </div>
+
+  <!-- Subscriptions table -->
+  <div class="bg-zinc-900 rounded-xl border border-zinc-800">
+    <div class="p-5 border-b border-zinc-800 flex flex-wrap gap-3 items-center">
+      <h2 class="text-sm font-semibold text-zinc-400 uppercase tracking-widest flex-1">Subscriptions</h2>
+      <input id="search" type="text" placeholder="Search channel title…"
+        class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-violet-500 w-56" />
+      <select id="filter-lean"
+        class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-violet-500">
+        <option value="">All leans</option>
+        <option>far_left</option><option>left</option><option>center_left</option>
+        <option>center</option><option>center_right</option><option>right</option>
+        <option>far_right</option><option>nonpartisan</option><option>unknown</option>
+      </select>
+      <select id="filter-status"
+        class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-violet-500">
+        <option value="">All</option><option value="active">Active</option><option value="removed">Removed</option>
+      </select>
+      <select id="filter-risk"
+        class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-violet-500">
+        <option value="">Any risk</option>
+        <option value="1">Risk ≥ 1</option>
+        <option value="2">Risk ≥ 2</option>
+      </select>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-zinc-500 text-xs uppercase tracking-wider border-b border-zinc-800">
+            <th class="px-4 py-3 text-left" data-col="channel_title">Channel</th>
+            <th class="px-4 py-3 text-left" data-col="primary_category">Category</th>
+            <th class="px-4 py-3 text-left" data-col="political_lean">Lean</th>
+            <th class="px-4 py-3 text-left" data-col="tone_style">Tone</th>
+            <th class="px-4 py-3 text-center" data-col="risk_score">Risk</th>
+            <th class="px-4 py-3 text-center" data-col="status">Status</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div id="table-footer" class="px-5 py-3 text-xs text-zinc-600 border-t border-zinc-800"></div>
+  </div>
+
+  <script type="module">
+    import * as duckdb from 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.29.0/dist/duckdb-browser-eh.mjs';
+
+    // ── DuckDB init ──────────────────────────────────────────────────────────
+    async function initDB() {
+      const BUNDLES = duckdb.getJsDelivrBundles();
+      const bundle = await duckdb.selectBundle(BUNDLES);
+      const workerUrl = URL.createObjectURL(
+        new Blob([`importScripts("${bundle.mainWorker}");`], { type: 'text/javascript' })
+      );
+      const worker = new Worker(workerUrl);
+      const logger = new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING);
+      const db = await duckdb.createDuckDB(bundle, logger, worker);
+      await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+      return db;
+    }
+
+    async function loadParquet(db) {
+      const url = '../output/subscriptions_enriched.parquet';
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`Could not fetch ${url} (${resp.status}). Run python enrich.py first, then serve from project root.`);
+      const buf = await resp.arrayBuffer();
+      await db.registerFileBuffer('subs.parquet', new Uint8Array(buf));
+      const conn = await db.connect();
+      await conn.query("CREATE VIEW subs AS SELECT * FROM read_parquet('subs.parquet')");
+      return conn;
+    }
+
+    async function q(conn, sql) {
+      const result = await conn.query(sql);
+      return result.toArray().map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, v?.toString?.() ?? v])));
+    }
+
+    // ── Render helpers ───────────────────────────────────────────────────────
+    const LEAN_ORDER = ['far_left','left','center_left','center','center_right','right','far_right','nonpartisan','unknown'];
+    const LEAN_COLORS = {
+      far_left: '#7c3aed', left: '#2563eb', center_left: '#0ea5e9',
+      center: '#6b7280', center_right: '#d97706', right: '#dc2626',
+      far_right: '#991b1b', nonpartisan: '#16a34a', unknown: '#52525b',
+    };
+    const RISK_LABELS = {
+      risk_white_supremacy: 'White Supremacy',
+      risk_ethnonationalism: 'Ethnonationalism',
+      risk_anti_immigrant_extremism: 'Anti-Immigrant',
+      risk_antisemitism: 'Antisemitism',
+      risk_anti_black_rhetoric: 'Anti-Black Rhetoric',
+      risk_anti_lgbtq_extremism: 'Anti-LGBTQ+',
+      risk_religious_extremism: 'Religious Extremism',
+      risk_conspiracy_driven: 'Conspiracy Driven',
+      risk_harassment_mobs: 'Harassment Mobs',
+      risk_misinformation_pattern: 'Misinformation',
+    };
+
+    function mkChart(id, type, labels, data, colors, opts = {}) {
+      const ctx = document.getElementById(id);
+      return new Chart(ctx, {
+        type,
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: 'transparent', borderRadius: 4 }] },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            label: ctx => ` ${ctx.parsed.y ?? ctx.parsed.x ?? ctx.raw}`
+          }}},
+          scales: {
+            x: { grid: { color: '#27272a' }, ticks: { color: '#71717a', font: { size: 11 } } },
+            y: { grid: { color: '#27272a' }, ticks: { color: '#71717a', font: { size: 11 } } },
+            ...opts.scales
+          },
+          indexAxis: opts.indexAxis,
+        }
+      });
+    }
+
+    // ── Stats ────────────────────────────────────────────────────────────────
+    async function renderStats(conn) {
+      const rows = await q(conn, `
+        SELECT
+          COUNT(*) FILTER (WHERE status='active') AS active,
+          COUNT(*) FILTER (WHERE risk_score > 0 AND status='active') AS flagged,
+          COUNT(*) FILTER (WHERE risk_score >= 2 AND status='active') AS high_risk,
+          COUNT(*) FILTER (WHERE status='removed') AS removed
+        FROM subs
+      `);
+      const s = rows[0];
+      document.getElementById('stat-active').textContent = s.active;
+      document.getElementById('stat-flagged').textContent = s.flagged;
+      document.getElementById('stat-high-risk').textContent = s.high_risk;
+      document.getElementById('stat-removed').textContent = s.removed;
+    }
+
+    // ── Category chart ───────────────────────────────────────────────────────
+    async function renderCategoryChart(conn) {
+      const rows = await q(conn, `
+        SELECT primary_category AS cat, COUNT(*) AS cnt
+        FROM subs WHERE status='active'
+        GROUP BY cat ORDER BY cnt DESC LIMIT 12
+      `);
+      const palette = ['#7c3aed','#6d28d9','#5b21b6','#4c1d95','#8b5cf6','#a78bfa',
+                       '#c4b5fd','#ddd6fe','#2563eb','#3b82f6','#60a5fa','#93c5fd'];
+      mkChart('chart-category', 'bar',
+        rows.map(r => r.cat), rows.map(r => parseInt(r.cnt)), palette);
+    }
+
+    // ── Political lean chart ─────────────────────────────────────────────────
+    async function renderLeanChart(conn) {
+      const rows = await q(conn, `
+        SELECT political_lean AS lean, COUNT(*) AS cnt
+        FROM subs WHERE status='active'
+        GROUP BY lean ORDER BY cnt DESC
+      `);
+      const sorted = [...rows].sort((a, b) => {
+        return LEAN_ORDER.indexOf(a.lean) - LEAN_ORDER.indexOf(b.lean);
+      });
+      mkChart('chart-lean', 'bar',
+        sorted.map(r => r.lean),
+        sorted.map(r => parseInt(r.cnt)),
+        sorted.map(r => LEAN_COLORS[r.lean] || '#52525b'));
+    }
+
+    // ── Risk flags chart ─────────────────────────────────────────────────────
+    async function renderRiskChart(conn) {
+      const cols = Object.keys(RISK_LABELS);
+      const sums = cols.map(c => `SUM(${c}::INT) AS ${c}`).join(', ');
+      const rows = await q(conn, `SELECT ${sums} FROM subs WHERE status='active'`);
+      const s = rows[0];
+      const pairs = cols.map(c => ({ label: RISK_LABELS[c], val: parseInt(s[c] || 0) }))
+                        .sort((a, b) => b.val - a.val);
+      mkChart('chart-risk', 'bar',
+        pairs.map(p => p.label), pairs.map(p => p.val),
+        pairs.map(p => p.val >= 3 ? '#dc2626' : p.val >= 1 ? '#f59e0b' : '#374151'),
+        { indexAxis: 'y', scales: { x: {}, y: { ticks: { font: { size: 11 } } } } });
+    }
+
+    // ── Table ────────────────────────────────────────────────────────────────
+    let allRows = [];
+    let sortCol = 'risk_score';
+    let sortDir = -1;
+
+    async function loadTableData(conn) {
+      allRows = await q(conn, `
+        SELECT channel_title, channel_url, primary_category, political_lean,
+               tone_style, risk_score, status, enrichment_source, notes
+        FROM subs ORDER BY risk_score DESC, channel_title
+      `);
+    }
+
+    function riskBadge(score) {
+      const n = parseInt(score);
+      const cls = n === 0 ? 'risk-0' : n === 1 ? 'risk-1' : 'risk-hi';
+      return `<span class="badge ${cls}">${n}</span>`;
+    }
+
+    function leanBadge(lean) {
+      return `<span class="badge lean-${lean}">${lean.replace(/_/g,' ')}</span>`;
+    }
+
+    function statusBadge(s) {
+      return s === 'active'
+        ? `<span class="badge" style="background:#14532d;color:#bbf7d0">active</span>`
+        : `<span class="badge" style="background:#3f3f46;color:#a1a1aa">removed</span>`;
+    }
+
+    function renderTable() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const lean = document.getElementById('filter-lean').value;
+      const status = document.getElementById('filter-status').value;
+      const minRisk = parseInt(document.getElementById('filter-risk').value || '0');
+
+      let rows = allRows.filter(r =>
+        (!search || r.channel_title.toLowerCase().includes(search)) &&
+        (!lean || r.political_lean === lean) &&
+        (!status || r.status === status) &&
+        (parseInt(r.risk_score) >= minRisk)
+      );
+
+      rows.sort((a, b) => {
+        const av = a[sortCol] ?? '', bv = b[sortCol] ?? '';
+        const an = parseFloat(av), bn = parseFloat(bv);
+        if (!isNaN(an) && !isNaN(bn)) return sortDir * (an - bn);
+        return sortDir * av.localeCompare(bv);
+      });
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td class="px-4 py-2.5">
+            <a href="${r.channel_url}" target="_blank"
+               class="text-violet-300 hover:text-violet-100 hover:underline font-medium">
+              ${r.channel_title}
+            </a>
+            ${r.notes ? `<div class="text-zinc-600 text-xs mt-0.5 truncate max-w-xs" title="${r.notes}">${r.notes}</div>` : ''}
+          </td>
+          <td class="px-4 py-2.5 text-zinc-400">${r.primary_category}</td>
+          <td class="px-4 py-2.5">${leanBadge(r.political_lean)}</td>
+          <td class="px-4 py-2.5 text-zinc-500">${r.tone_style}</td>
+          <td class="px-4 py-2.5 text-center">${riskBadge(r.risk_score)}</td>
+          <td class="px-4 py-2.5 text-center">${statusBadge(r.status)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('table-footer').textContent =
+        `Showing ${rows.length} of ${allRows.length} channels`;
+    }
+
+    // ── Sort headers ─────────────────────────────────────────────────────────
+    document.querySelectorAll('th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        if (sortCol === th.dataset.col) sortDir *= -1;
+        else { sortCol = th.dataset.col; sortDir = -1; }
+        renderTable();
+      });
+    });
+
+    ['search','filter-lean','filter-status','filter-risk'].forEach(id => {
+      document.getElementById(id).addEventListener('input', renderTable);
+    });
+
+    // ── Boot ─────────────────────────────────────────────────────────────────
+    async function init() {
+      const statusEl = document.getElementById('data-status');
+      try {
+        statusEl.textContent = 'Initializing DuckDB-WASM…';
+        const db = await initDB();
+
+        statusEl.textContent = 'Loading Parquet…';
+        const conn = await loadParquet(db);
+
+        document.getElementById('last-updated').textContent =
+          `Updated ${new Date().toLocaleDateString()}`;
+        statusEl.textContent = '✓ Data loaded';
+        statusEl.className = 'mt-1 text-green-500';
+
+        await Promise.all([
+          renderStats(conn),
+          renderCategoryChart(conn),
+          renderLeanChart(conn),
+          renderRiskChart(conn),
+          loadTableData(conn).then(renderTable),
+        ]);
+      } catch (err) {
+        statusEl.textContent = '✗ Error';
+        statusEl.className = 'mt-1 text-red-400';
+        const banner = document.getElementById('error-banner');
+        banner.textContent = err.message;
+        banner.classList.remove('hidden');
+        console.error(err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

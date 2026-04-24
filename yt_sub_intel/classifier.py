@@ -1,13 +1,3 @@
-"""
-Classification engine for YouTube channels.
-
-Resolution order:
-  1. Exact match by channel_id in channel_classifications.json
-  2. Exact match by channel_title (case-insensitive) in channel_classifications.json
-  3. First matching regex rule in keyword_rules.json
-  4. Default "Unknown" classification
-"""
-
 from __future__ import annotations
 
 import json
@@ -15,7 +5,7 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.schema import ENRICHMENT_VERSION, RISK_FLAG_COLUMNS
+from yt_sub_intel.schema import ENRICHMENT_VERSION, RISK_FLAG_COLUMNS
 
 _DEFAULT_CLASSIFICATION: Dict[str, Any] = {
     "primary_category": "Unknown",
@@ -51,12 +41,9 @@ class Classifier:
         with open(rules_path) as f:
             rdata = json.load(f)
         for rule in rdata.get("rules", []):
-            self._rules.append({
-                **rule,
-                "_compiled": re.compile(rule["pattern"]),
-            })
+            self._rules.append({**rule, "_compiled": re.compile(rule["pattern"])})
 
-    def classify(self, channel_id: str, channel_title: str) -> dict[str, Any]:
+    def classify(self, channel_id: str, channel_title: str) -> Dict[str, Any]:
         record = (
             self._by_id.get(channel_id.strip())
             or self._by_title.get(channel_title.strip().lower())
@@ -77,7 +64,7 @@ class Classifier:
         return self._build_row(record, source)
 
     def _build_row(self, record: Dict, source: str) -> Dict[str, Any]:
-        raw_flags: dict = record.get("risk_flags", {})
+        raw_flags: Dict = record.get("risk_flags", {})
 
         risk_cols: Dict[str, bool] = {}
         for col in RISK_FLAG_COLUMNS:
@@ -85,13 +72,11 @@ class Classifier:
             risk_cols[col] = bool(raw_flags.get(flag_key, False))
 
         risk_score = sum(risk_cols.values())
-
         domains = record.get("content_domains", [])
         content_domains_str = json.dumps(domains) if domains else "[]"
-
         tone_shift: Optional[Dict] = record.get("tone_shift")
 
-        row: dict[str, Any] = {
+        return {
             "primary_category": record.get("primary_category", "Unknown"),
             "secondary_category": record.get("secondary_category", ""),
             "political_lean": record.get("political_lean", "unknown"),
@@ -108,4 +93,3 @@ class Classifier:
             "enrichment_version": ENRICHMENT_VERSION,
             "enrichment_source": source,
         }
-        return row

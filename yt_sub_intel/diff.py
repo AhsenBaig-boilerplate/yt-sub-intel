@@ -1,8 +1,3 @@
-"""
-Change detection between two enriched DataFrames.
-Compares by channel_id and reports new, removed, and modified channels.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -30,12 +25,11 @@ class DiffReport:
         return bool(self.new_channels or self.removed_channels or self.modified_channels)
 
     def summary(self) -> str:
-        lines = [
+        return "\n".join([
             f"  New channels:      {len(self.new_channels)}",
             f"  Removed channels:  {len(self.removed_channels)}",
             f"  Modified channels: {len(self.modified_channels)}",
-        ]
-        return "\n".join(lines)
+        ])
 
     def to_dict(self) -> dict:
         return {
@@ -46,9 +40,7 @@ class DiffReport:
 
 
 def compute_diff(existing: pl.DataFrame, incoming: pl.DataFrame) -> DiffReport:
-    """Compare existing (previous run) vs incoming (current run) DataFrames."""
     report = DiffReport()
-
     existing_ids = set(existing["channel_id"].to_list())
     incoming_ids = set(incoming["channel_id"].to_list())
 
@@ -65,7 +57,6 @@ def compute_diff(existing: pl.DataFrame, incoming: pl.DataFrame) -> DiffReport:
     for col in CLASSIFICATION_COLS:
         if col not in ex_shared.columns or col not in in_shared.columns:
             continue
-
         changed = (
             ex_shared.select(["channel_id", "channel_title", col])
             .rename({col: f"old_{col}"})
@@ -76,7 +67,6 @@ def compute_diff(existing: pl.DataFrame, incoming: pl.DataFrame) -> DiffReport:
             )
             .filter(pl.col(f"old_{col}") != pl.col(f"new_{col}"))
         )
-
         for row in changed.to_dicts():
             report.modified_channels.append({
                 "channel_id": row["channel_id"],
