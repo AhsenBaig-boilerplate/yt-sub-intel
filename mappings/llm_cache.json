@@ -1,0 +1,8 @@
+{
+  "_meta": {
+    "description": "LLM classification cache. Keyed by channel_id. Auto-populated by --llm-classify.",
+    "model": "claude-haiku-4-5",
+    "updated": ""
+  },
+  "channels": {}
+}

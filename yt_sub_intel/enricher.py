@@ -51,11 +51,19 @@ def _enrich_dataframe(
     classifier: Classifier,
     today: str,
     existing: Optional[pl.DataFrame],
+    llm_classifier: Optional[Any] = None,
 ) -> pl.DataFrame:
     rows = []
     existing_by_id: Dict[str, Dict] = {}
     if existing is not None:
         existing_by_id = {r["channel_id"]: r for r in existing.to_dicts()}
+
+    llm_total = sum(
+        1 for row in raw.to_dicts()
+        if llm_classifier is not None
+        and not llm_classifier.cache_hit((row.get("channel_id") or "").strip())
+    )
+    llm_seen = 0
 
     for row in raw.to_dicts():
         cid = (row.get("channel_id") or "").strip()
@@ -63,6 +71,25 @@ def _enrich_dataframe(
         ctitle = (row.get("channel_title") or "").strip()
 
         cls = classifier.classify(cid, ctitle)
+
+        if cls["enrichment_source"] == "default" and llm_classifier is not None:
+            from_cache = llm_classifier.cache_hit(cid)
+            if not from_cache:
+                llm_seen += 1
+                print(
+                    f"  [{llm_seen}/{llm_total}] {ctitle[:60]}",
+                    end="", flush=True,
+                )
+            try:
+                cls = llm_classifier.classify(cid, ctitle, curl)
+                if not from_cache:
+                    print(
+                        f" → {cls['primary_category']} / {cls['political_lean']}"
+                    )
+            except Exception as exc:
+                if not from_cache:
+                    print(f" → [error: {exc}]")
+
         prev = existing_by_id.get(cid)
         first_seen = prev["first_seen_date"] if prev else today
 
@@ -101,6 +128,9 @@ def run(
     output_dir: Path,
     classifications_path: Path,
     rules_path: Path,
+    llm_classify: bool = False,
+    llm_model: str = "claude-haiku-4-5",
+    llm_cache_path: Optional[Path] = None,
 ) -> None:
     today = str(date.today())
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -115,12 +145,26 @@ def run(
 
     classifier = Classifier(classifications_path, rules_path)
 
+    llm_classifier = None
+    if llm_classify:
+        try:
+            from yt_sub_intel.llm_classifier import LLMClassifier
+            cache_path = llm_cache_path or (classifications_path.parent / "llm_cache.json")
+            llm_classifier = LLMClassifier(cache_path=cache_path, model=llm_model)
+            print(f"[yt-sub-intel] LLM classification enabled (model: {llm_model})")
+        except ImportError:
+            print("[yt-sub-intel] WARNING: anthropic package not installed — skipping LLM classify")
+            print("  Run: pip install anthropic")
+
     existing: Optional[pl.DataFrame] = None
     if parquet_path.exists():
         existing = pl.read_parquet(parquet_path)
         print(f"[yt-sub-intel] Loaded existing Parquet with {len(existing)} records")
 
-    enriched = _enrich_dataframe(raw, classifier, today, existing)
+    enriched = _enrich_dataframe(raw, classifier, today, existing, llm_classifier)
+
+    if llm_classifier is not None:
+        llm_classifier.flush()
 
     diff_report = None
     if existing is not None:
@@ -152,7 +196,10 @@ def run(
 
     active_count = len(enriched.filter(pl.col("status") == "active"))
     flagged_count = len(enriched.filter(pl.col("risk_score") > 0))
+    llm_count = len(enriched.filter(pl.col("enrichment_source") == "llm"))
     print(f"\n[yt-sub-intel] Done.")
-    print(f"  Active channels:   {active_count}")
-    print(f"  Flagged channels:  {flagged_count}")
-    print(f"  Output:            {output_dir.resolve()}")
+    print(f"  Active channels:    {active_count}")
+    print(f"  Flagged channels:   {flagged_count}")
+    if llm_count:
+        print(f"  LLM classified:     {llm_count}")
+    print(f"  Output:             {output_dir.resolve()}")

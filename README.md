@@ -137,6 +137,41 @@ The dashboard loads `output/subscriptions_enriched.parquet` via DuckDB-WASM and 
 
 ---
 
+## LLM-Assisted Classification
+
+Channels that match no manual entry and no keyword rule get `enrichment_source = "default"`. Pass `--llm-classify` to send those channels to Claude for automatic classification.
+
+**Requirements:**
+
+```bash
+pip install "yt-sub-intel[llm]"   # or: pip install anthropic
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+**Usage:**
+
+```bash
+yt-sub-intel --llm-classify
+```
+
+```bash
+# Use a smarter (but more expensive) model for high-value imports
+yt-sub-intel --llm-classify --model claude-sonnet-4-6
+```
+
+**How it works:**
+
+- Calls the Claude API with a cached system prompt (prompt caching keeps repeated calls cheap)
+- Saves results to `mappings/llm_cache.json` — channels are never re-classified across runs
+- Falls back silently to `"default"` if the API call fails
+- Each classified channel gets `enrichment_source = "llm"`
+
+**Cost estimate:** `claude-haiku-4-5` costs ~$0.001–0.003 per channel (input + output tokens). A 500-channel import with 50 unknowns costs roughly $0.05–0.15. The cache eliminates repeat costs on re-imports.
+
+**After running**, review LLM classifications and promote any you want to pin permanently into `mappings/channel_classifications.json` — manual entries always take precedence.
+
+---
+
 ## Querying with DuckDB
 
 **Interactive:**
@@ -255,13 +290,13 @@ See `schema/enriched_schema.json` for the full JSON Schema definition.
 | Add auto-classification rules | `mappings/keyword_rules.json` |
 | Add DuckDB analytics | `queries/examples.sql` |
 | Change output location | `--output` flag or edit `DEFAULT_OUTPUT` in `yt_sub_intel/cli.py` |
-| Add LLM-based enrichment | New classifier in `yt_sub_intel/classifier.py`, add `"llm"` to `enrichment_source` enum |
+| Change LLM model | `--model claude-sonnet-4-6` flag, or edit `DEFAULT` in `yt_sub_intel/cli.py` |
+| Clear LLM cache | Delete or empty `mappings/llm_cache.json` |
 
 ---
 
 ## Future Roadmap
 
-- [ ] LLM-assisted auto-classification for unknown channels
 - [ ] Channel growth / content velocity tracking
 - [ ] Export to Obsidian / Notion
 - [ ] `pipx install` packaging for global install without a venv

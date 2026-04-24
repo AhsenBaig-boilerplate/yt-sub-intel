@@ -15,6 +15,9 @@ dependencies = [
     "click>=8.0.0",
 ]
 
+[project.optional-dependencies]
+llm = ["anthropic>=0.40.0"]
+
 [project.scripts]
 yt-sub-intel = "yt_sub_intel.cli:main"
 
